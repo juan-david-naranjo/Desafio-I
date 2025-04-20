@@ -54,6 +54,7 @@ void dbitsright(unsigned char* pixeles,unsigned short int n,int width, int heigh
 void XoR(unsigned char* pixeles1, unsigned char* pixeles2,int width, int height);
 bool rotbitleft(unsigned char* pixeles1,unsigned short int n,int width, int height);
 bool rotbitright(unsigned char* pixeles1,unsigned short int n,int width, int height);
+void unMask(unsigned char* Id,unsigned char* M,unsigned int height, unsigned int width,unsigned int s);
 //-----------------------------------------------------------------------------------------------------
 int main()
 {   
@@ -408,7 +409,12 @@ bool rotbitright(unsigned char* pixeles1,unsigned short int n,int width, int hei
 
 
 }
-
+void unMask(unsigned char* Id,unsigned char* M,unsigned int height, unsigned int width,unsigned int s){
+    for (unsigned int k=0;k<width*height*3;k++){
+      Id[k+s]=Id[k+s] - M[k];
+    }
+    return;    
+}
 
 
 
