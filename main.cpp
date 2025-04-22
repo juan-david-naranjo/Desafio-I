@@ -48,50 +48,72 @@ unsigned int* loadSeedMasking(const char* nombreArchivo, int &seed, int &n_pixel
 
 
 //-----------------------------------------------------------------------------------------------------
+
 bool archivosiguales(string archivo1,string archivo2);
 void dbitsleft(unsigned char* pixeles,unsigned short int n,int width, int height);
 void dbitsright(unsigned char* pixeles,unsigned short int n,int width, int height);
 void XoR(unsigned char* pixeles1, unsigned char* pixeles2,int width, int height);
 bool rotbitleft(unsigned char* pixeles1,unsigned short int n,int width, int height);
 bool rotbitright(unsigned char* pixeles1,unsigned short int n,int width, int height);
-void unMask(unsigned char* Id,unsigned char* M,unsigned int height, unsigned int width,unsigned int s);
+void unMask(unsigned char* Id,unsigned char* M, int height,  int width,unsigned int s);
+void unMaskM(unsigned int* Id,unsigned char* M,unsigned int n);
+
+
 //-----------------------------------------------------------------------------------------------------
+
+
 int main()
 {   
     // Definición de rutas de archivo de entrada (imagen original) y salida (imagen modificada)
     QString archivoEntrada = "C:\\Users\\Cavieres Bustillo\\Desktop\\juanda\\DesafioI\\Code\\I_O.bmp";
-    QString archivoSalida = "C:\\Users\\Cavieres Bustillo\\Desktop\\juanda\\DesafioI\\Code\\I_D.bmp";
-    string archivo1="C:\\Users\\Cavieres Bustillo\\Desktop\\juanda\\DesafioI\\Code\\M2.2.txt";
-    string archivo2="C:\\Users\\Cavieres Bustillo\\Desktop\\juanda\\DesafioI\\Code\\M2.txt";
+    QString Mask = "C:\\Users\\Cavieres Bustillo\\Desktop\\juanda\\DesafioI\\Code\\I_D.bmp";
+    QString IM = "C:\\Users\\Cavieres Bustillo\\Desktop\\juanda\\DesafioI\\Code\\I_M.bmp";
+
+    unsigned int* procedimieno=new unsigned int [4];
+
+
+    // string archivo1="C:\\Users\\Cavieres Bustillo\\Desktop\\juanda\\DesafioI\\Code\\M2.2.txt";
+    // string archivo2="C:\\Users\\Cavieres Bustillo\\Desktop\\juanda\\DesafioI\\Code\\M2.txt";
     ///bool iguales=archivosiguales(archivo1,archivo2);
+
+
+
 
     // Variables para almacenar las dimensiones de la imagen
     int height = 0;
     int width = 0;
+    //variables para almacenar las dimensiones de la mascara
+    int hMask = 0;
+    int wMask = 0;
+
 
     // Carga la imagen BMP en memoria dinámica y obtiene ancho y alto
-    unsigned char *pixelData = loadPixels(archivoEntrada, width, height);
-    unsigned char *pixel = loadPixels(archivoSalida, width, height);
+    unsigned char *pixelData = loadPixels(archivoEntrada, width, height);   //pixeles de la ultima imagen
+    unsigned char *pixelMask = loadPixels(Mask, wMask, hMask);              //pixeles de la mascara
+    unsigned char *I_M = loadPixels(IM, width, height);                     //pixeles de la I_M para las operaciones XoR
+    unsigned char *copyData = loadPixels(archivoEntrada, width, height);
+    unsigned int opcion=1;
 
-    for (int i = 0; i < width/2; i += 3) {
-       cout<< (int)pixelData[i]<<" ";    // Canal rojo
-       cout<< (int)pixelData[i + 1]<<" "; // Canal verde
-        cout<< (int)pixelData[i + 2]<< " "; // Canal azul
-       cout <<endl;
-    }
-    cout <<"---------------------------------------------"<<endl;
+/*
+    // for (int i = 0; i < width/2; i += 3) {
+    //    cout<< (int)pixelData[i]<<" ";    // Canal rojo
+    //    cout<< (int)pixelData[i + 1]<<" "; // Canal verde
+    //     cout<< (int)pixelData[i + 2]<< " "; // Canal azul
+    //    cout <<endl;
+    // }
+    // cout <<"---------------------------------------------"<<endl;
 
-    rotbitright(pixelData,3,width,height);
+    // rotbitright(pixelData,3,width,height);
 
 
-    for (int i = 0; i < width/2; i += 3) {
-        cout<< (int)pixelData[i]<<" ";    // Canal rojo
-        cout<< (int)pixelData[i + 1]<<" "; // Canal verde
-        cout<< (int)pixelData[i + 2]<< " "; // Canal azul
-        cout <<endl;
-    }
+    // for (int i = 0; i < width/2; i += 3) {
+    //     cout<< (int)pixelData[i]<<" ";    // Canal rojo
+    //     cout<< (int)pixelData[i + 1]<<" "; // Canal verde
+    //     cout<< (int)pixelData[i + 2]<< " "; // Canal azul
+    //     cout <<endl;
+    // }
 
- /*
+
     // Simula una modificación de la imagen asignando valores RGB incrementales
     // (Esto es solo un ejemplo de manipulación artificial)
     for (int i = 0; i < width * height * 3; i += 3) {
@@ -106,19 +128,47 @@ int main()
     // Muestra si la exportación fue exitosa (true o false)
     cout << exportI << endl;
 
-    // Libera la memoria usada para los píxeles
-    delete[] pixelData;
-    pixelData = nullptr;
 
+*/
     // Variables para almacenar la semilla y el número de píxeles leídos del archivo de enmascaramiento
     int seed = 0;
     int n_pixels = 0;
 
     // Carga los datos de enmascaramiento desde un archivo .txt (semilla + valores RGB)
-    unsigned int *maskingData = loadSeedMasking("C:\\Users\\Cavieres Bustillo\\Desktop\\juanda\\DesafioI\\Code\\M1.txt", seed, n_pixels);
-
-    // Muestra en consola los primeros valores RGB leídos desde el archivo de enmascaramiento
+    unsigned int *maskingData = loadSeedMasking("C:\\Users\\Cavieres Bustillo\\Desktop\\juanda\\DesafioI\\Code\\M2.txt", seed, n_pixels);
     for (int i = 0; i < n_pixels * 3; i += 3) {
+
+        cout << "Pixel " << i / 3 << ": ("
+             << maskingData[i] << ", "
+             << maskingData[i + 1] << ", "
+             << maskingData[i + 2] << ")" << endl;
+    }
+
+    unMaskM(maskingData,pixelMask,n_pixels);
+    cout<<"--------------------------------------------------------------------------------"<<endl;
+    while(false){
+        opcion++;
+        unMask(pixelData,pixelMask,height,width,seed);      //como despues de cada transformacion se enmascara , hacemos el desenmascarmiento al inicio
+        switch (opcion){
+
+        case 1:
+            dbitsleft(pixelData,1,width,height);
+
+            XoR(pixelData,I_M,width,height);
+            break;
+        case 2:
+        break;
+        case 3:
+                break;
+        case 4:
+            break;
+        }
+    }
+
+
+
+    for (int i = 0; i < n_pixels * 3; i += 3) {
+
         cout << "Pixel " << i / 3 << ": ("
              << maskingData[i] << ", "
              << maskingData[i + 1] << ", "
@@ -130,11 +180,13 @@ int main()
         delete[] maskingData;
         maskingData = nullptr;
     }
+    // Libera la memoria usada para los píxeles
+    delete[] pixelData;
+    pixelData = nullptr;
 
 
 
 
-*/
 
 
     return 0; // Fin del programa
@@ -269,7 +321,7 @@ unsigned int* loadSeedMasking(const char* nombreArchivo, int &seed, int &n_pixel
     // Leer la semilla desde la primera línea del archivo
     archivo >> seed;
 
-    int r, g, b;
+    unsigned int r, g, b;
 
     // Contar cuántos grupos de valores RGB hay en el archivo
     // Se asume que cada línea después de la semilla tiene tres valores (r, g, b)
@@ -312,6 +364,82 @@ unsigned int* loadSeedMasking(const char* nombreArchivo, int &seed, int &n_pixel
     // Retornar el puntero al arreglo con los datos RGB
     return RGB;
 }
+/*
+unsigned int* loadSeedMasking(const char* nombreArchivo, int &seed, int &n_pixels){
+    /*
+ * @brief Carga la semilla y los resultados del enmascaramiento desde un archivo de texto.
+ *
+ * Esta función abre un archivo de texto que contiene una semilla en la primera línea y,
+ * a continuación, una lista de valores RGB resultantes del proceso de enmascaramiento.
+ * Primero cuenta cuántos tripletes de píxeles hay, luego reserva memoria dinámica
+ * y finalmente carga los valores en un arreglo de enteros.
+ *
+ * @param nombreArchivo Ruta del archivo de texto que contiene la semilla y los valores RGB.
+ * @param seed Variable de referencia donde se almacenará el valor entero de la semilla.
+ * @param n_pixels Variable de referencia donde se almacenará la cantidad de píxeles leídos
+ *                 (equivalente al número de líneas después de la semilla).
+ *
+ * @return Puntero a un arreglo dinámico de enteros que contiene los valores RGB
+ *         en orden secuencial (R, G, B, R, G, B, ...). Devuelve nullptr si ocurre un error al abrir el archivo.
+ *
+ * @note Es responsabilidad del usuario liberar la memoria reservada con delete[].
+ *//*
+
+    // Abrir el archivo que contiene la semilla y los valores RGB
+    ifstream archivo(nombreArchivo);
+    if (!archivo.is_open()) {
+        // Verificar si el archivo pudo abrirse correctamente
+        cout << "No se pudo abrir el archivo." << endl;
+
+        return nullptr;
+    }
+
+    // Leer la semilla desde la primera línea del archivo
+    archivo >> seed;
+
+    int r, g, b;
+
+    // Contar cuántos grupos de valores RGB hay en el archivo
+    // Se asume que cada línea después de la semilla tiene tres valores (r, g, b)
+    while (archivo >> r >> g >> b) {
+        n_pixels++;  // Contamos la cantidad de píxeles
+    }
+
+    // Cerrar el archivo para volver a abrirlo desde el inicio
+    archivo.close();
+    archivo.open(nombreArchivo);
+
+    // Verificar que se pudo reabrir el archivo correctamente
+    if (!archivo.is_open()) {
+        cout << "Error al reabrir el archivo." << endl;
+        return nullptr;
+    }
+
+    // Reservar memoria dinámica para guardar todos los valores RGB
+    // Cada píxel tiene 3 componentes: R, G y B
+    unsigned int* RGB = new unsigned int[n_pixels * 3];
+
+    // Leer nuevamente la semilla desde el archivo (se descarta su valor porque ya se cargó antes)
+    archivo >> seed;
+
+    // Leer y almacenar los valores RGB uno por uno en el arreglo dinámico
+    for (int i = 0; i < n_pixels * 3; i += 3) {
+        archivo >> r >> g >> b;
+        RGB[i] = r;
+        RGB[i + 1] = g;
+        RGB[i + 2] = b;
+    }
+
+    // Cerrar el archivo después de terminar la lectura
+    archivo.close();
+
+    // Mostrar información de control en consola
+    cout << "Semilla: " << seed << endl;
+    cout << "Cantidad de píxeles leídos: " << n_pixels << endl;
+
+    // Retornar el puntero al arreglo con los datos RGB
+    return RGB;
+}*/
 
 
 bool archivosiguales(string archivo1,string archivo2){
@@ -346,7 +474,7 @@ void dbitsleft(unsigned char* pixeles,unsigned short int n,int width, int height
 *este agoritmo recibe un arreglo de unsigned char , luego itera en cada objeto del arreglo y
 *le desplaza n bits a la izquierda a dicho elemento.
 */
-    for(unsigned int i=0;i<width*height*3;i+=3){
+    for( int i=0;i<width*height*3;i+=3){
         pixeles[i]=pixeles[i]<<n;
         pixeles[i+1]=pixeles[i+1]<<n;
         pixeles[i+2]=pixeles[i+2]<<n;
@@ -362,7 +490,7 @@ void dbitsright(unsigned char* pixeles,unsigned short int n,int width, int heigh
 */
 
 
-    for(unsigned int i=0;i<width*height*3;i+=3){
+    for( int i=0;i<width*height*3;i+=3){
         pixeles[i]=pixeles[i]>>n;
         pixeles[i+1]=pixeles[i+1]>>n;
         pixeles[i+2]=pixeles[i+2]>>n;
@@ -377,7 +505,7 @@ void XoR(unsigned char* i_D, unsigned char* i_M,int width, int height){
 
 
     */
-    for(unsigned int i=0;i<width*height*3;i+=3){
+    for( int i=0;i<width*height*3;i+=3){
         i_D[i]=i_D[i]^i_M[i];
         i_D[i+1]=i_D[i+1]^i_M[i+1];         // itera en cada byte del pixel i_D, y hace la operacion XoR con cada byte del pixel i_M
         i_D[i+2]=i_D[i+2]^i_M[i+2];
@@ -390,7 +518,7 @@ void XoR(unsigned char* i_D, unsigned char* i_M,int width, int height){
 bool rotbitleft(unsigned char* pixeles1,unsigned short int n,int width, int height){
 
     n %= 8; //evitar errores, dado a que nuestras variables a rotar son de 8 bits
-    for(unsigned int i=0;i<width*height*3;i+=3){
+    for( int i=0;i<width*height*3;i+=3){
         pixeles1[i]=(pixeles1[i]<<n)|(pixeles1[i]>>(8 - n));
         pixeles1[i+1]=(pixeles1[i+1]<<n)|(pixeles1[i+1]>>(8 - n));
         pixeles1[i+2]=(pixeles1[i+2]<<n)|(pixeles1[i+2]>>(8 - n));
@@ -400,7 +528,7 @@ bool rotbitleft(unsigned char* pixeles1,unsigned short int n,int width, int heig
 
 bool rotbitright(unsigned char* pixeles1,unsigned short int n,int width, int height){
     n %= 8; //evitar errores, dado a que nuestras variables a rotar son de 8 bits
-    for(unsigned int i=0;i<width*height*3;i+=3){
+    for( int i=0;i<width*height*3;i+=3){
         pixeles1[i]=(pixeles1[i]>>n)|(pixeles1[i]<<(8 - n));
         pixeles1[i+1]=(pixeles1[i+1]>>n)|(pixeles1[i+1]<<(8 - n));
         pixeles1[i+2]=(pixeles1[i+2]>>n)|(pixeles1[i+2]<<(8 - n));
@@ -409,11 +537,17 @@ bool rotbitright(unsigned char* pixeles1,unsigned short int n,int width, int hei
 
 
 }
-void unMask(unsigned char* Id,unsigned char* M,unsigned int height, unsigned int width,unsigned int s){
-    for (unsigned int k=0;k<width*height*3;k++){
+void unMask(unsigned char* Id,unsigned char* M, int height, int width,unsigned int s){
+    for ( int k=0;k<width*height*3;k++){
       Id[k+s]=Id[k+s] - M[k];
     }
     return;    
+}
+void unMaskM(unsigned int* Id,unsigned char* M, unsigned int n){
+    for (int i = 0; i < n * 3; i += 3) {
+        Id[i] = (unsigned char)((int)Id[i] - (int)M[i]);
+    }
+    return;
 }
 
 
